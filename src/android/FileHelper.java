@@ -327,4 +327,59 @@ public class FileHelper {
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
+
+    /***
+     * Modify by Lawrence 2020.08.06
+     * Whether the Uri authority is New Google Photos App.
+     */
+    public static boolean isGoogleNewPhotosUri(Uri uri) {
+        return "com.google.android.apps.photos.contentprovider".equals(uri.getAuthority());
+    }
+
+    /***
+     * Modify by Lawrence 2020.08.06 Copy the video file to the Cache folder
+     * result uri ex : /data/user/0/com.edetw.nextapp3/cache/Video_2db1497a-1ce9-4873-a99f-f1a1ea50c2c1.mp4
+     */
+    public static String copyNewGooglePhotoVideoToCache(Context context, Uri sourceUri) {
+        String filePath = "";
+        InputStream inputStream = null;
+        java.io.BufferedOutputStream outStream = null;
+        try {
+            inputStream = context.getContentResolver().openInputStream(sourceUri);
+
+            java.io.File extDir = context.getCacheDir();
+            String timeStamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            // Unable to know the selected file type, first assume that they are all mp4
+            filePath = extDir.getAbsolutePath() + "/VIDEO_" + timeStamp + ".mp4";
+            // filePath = extDir.getAbsolutePath() + "/Video_" + java.util.UUID.randomUUID().toString() + ".mp4";
+            outStream = new java.io.BufferedOutputStream(new java.io.FileOutputStream(filePath));
+
+            byte[] buf = new byte[2048];
+            int len;
+            while ((len = inputStream.read(buf)) > 0) {
+                outStream.write(buf, 0, len);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            filePath = "";
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (outStream != null) {
+                    outStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return filePath == "" ? sourceUri.toString() : filePath;
+    }
 }
