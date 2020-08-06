@@ -374,6 +374,7 @@ function takePictureFromCameraWP (successCallback, errorCallback, args) {
 
             return capture.initializeAsync(captureSettings);
         }).then(function () {
+
             // create focus control if available
             var VideoDeviceController = capture.videoDeviceController;
             var FocusControl = VideoDeviceController.focusControl;
@@ -476,6 +477,7 @@ function takePictureFromCameraWP (successCallback, errorCallback, args) {
     }
 
     function captureAction () {
+
         var encodingProperties;
         var fileName;
         var tempFolder = getAppData().temporaryFolder;
@@ -713,7 +715,7 @@ function takePictureFromCameraWindows (successCallback, errorCallback, args) {
 
     if (targetWidth === -1 && targetHeight === -1) {
         maxRes = UIMaxRes.highestAvailable;
-        // Temp fix for CB-10539
+    // Temp fix for CB-10539
     /* else if (totalPixels <= 320 * 240) {
         maxRes = UIMaxRes.verySmallQvga;
     } */
@@ -810,6 +812,7 @@ function savePhoto (picture, options, successCallback, errorCallback) {
 
     if (!options.saveToPhotoAlbum) {
         success(picture);
+
     } else {
         var savePicker = new Windows.Storage.Pickers.FileSavePicker();
         var saveFile = function (file) {

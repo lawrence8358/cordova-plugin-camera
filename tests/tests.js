@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem, MSApp */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
@@ -165,6 +165,26 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             var newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0, 300, 400);
             popoverHandle.setPosition(newPopoverOptions);
         };
+    }
+
+    function uploadImage () {
+        var ft = new FileTransfer();
+        var options = new FileUploadOptions();
+        options.fileKey = 'photo';
+        options.fileName = 'test.jpg';
+        options.mimeType = 'image/jpeg';
+        ft.onprogress = function (progressEvent) {
+            console.log('progress: ' + progressEvent.loaded + ' of ' + progressEvent.total);
+        };
+        var server = 'http://sheltered-retreat-43956.herokuapp.com';
+
+        ft.upload(pictureUrl, server + '/upload', win, fail, options);
+        function win (information_back) {
+            log('upload complete');
+        }
+        function fail (message) {
+            log('upload failed: ' + JSON.stringify(message));
+        }
     }
 
     function logCallback (apiName, success) {
@@ -358,7 +378,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
         var options = '';
         if (typeof values === 'boolean') {
-            values = { true: 1, false: 0 };
+            values = { 'true': 1, 'false': 0 };
         }
         for (var k in values) {
             var isSelected = '';
@@ -389,9 +409,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault) +
             createOptionsEl('encodingType', Camera.EncodingType, camEncodingTypeDefault) +
             createOptionsEl('mediaType', Camera.MediaType, camMediaTypeDefault) +
-            createOptionsEl('quality', { 0: 0, 50: 50, 80: 80, 100: 100 }, camQualityDefault) +
-            createOptionsEl('targetWidth', { 50: 50, 200: 200, 800: 800, 2048: 2048 }) +
-            createOptionsEl('targetHeight', { 50: 50, 200: 200, 800: 800, 2048: 2048 }) +
+            createOptionsEl('quality', { '0': 0, '50': 50, '80': 80, '100': 100 }, camQualityDefault) +
+            createOptionsEl('targetWidth', { '50': 50, '200': 200, '800': 800, '2048': 2048 }) +
+            createOptionsEl('targetHeight', { '50': 50, '200': 200, '800': 800, '2048': 2048 }) +
             createOptionsEl('allowEdit', true, camAllowEditDefault) +
             createOptionsEl('correctOrientation', true, camCorrectOrientationDefault) +
             createOptionsEl('saveToPhotoAlbum', true, camSaveToPhotoAlbumDefault) +
@@ -477,6 +497,10 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     createActionButton('Write Image', function () {
         writeImage();
     }, 'write');
+
+    createActionButton('Upload Image', function () {
+        uploadImage();
+    }, 'upload');
 
     createActionButton('Draw Using Canvas', function () {
         displayImageUsingCanvas();

@@ -383,7 +383,6 @@ static NSString* toBase64(NSData* data) {
                     }
                     [[self locationManager] startUpdatingLocation];
                 }
-                data = nil;
             }
         }
             break;
@@ -397,10 +396,15 @@ static NSString* toBase64(NSData* data) {
 - (NSString*)tempFilePath:(NSString*)extension
 {
     NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
+    NSFileManager* fileMgr = [[NSFileManager alloc] init]; // recommended by Apple (vs [NSFileManager defaultManager]) to be threadsafe
+    NSString* filePath;
+
     // unique file name
     NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
     NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
-    NSString* filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
+    do {
+        filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
+    } while ([fileMgr fileExistsAtPath:filePath]);
 
     return filePath;
 }
