@@ -537,6 +537,9 @@ static NSString* toBase64(NSData* data) {
     dispatch_block_t invoke = ^(void) {
         __block CDVPluginResult* result = nil;
 
+		// modify by Lawrence 2020.08.06, Clear previously created temporary files
+		[self clearLongTemp];
+
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
             [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
@@ -736,6 +739,52 @@ static NSString* toBase64(NSData* data) {
         ALAssetsLibrary *library = [ALAssetsLibrary new];
         [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:nil];
     }
+}
+
+// modify by Lawrence 2020.08.06, Clear previously created temporary files
+- (void)clearLongTemp
+{
+    // empty the tmp directory
+    NSFileManager* fileMgr = [[NSFileManager alloc] init];
+    NSError* err = nil;
+    
+    // clear contents of NSTemporaryDirectory
+    NSString* tempDirectoryPath = NSTemporaryDirectory();
+    NSDirectoryEnumerator* directoryEnumerator = [fileMgr enumeratorAtPath:tempDirectoryPath];
+    NSString* fileName = nil;
+    
+    while ((fileName = [directoryEnumerator nextObject])) {
+        // only delete the files we created
+        if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) continue;
+        
+        NSString* filePath = [tempDirectoryPath stringByAppendingPathComponent:fileName];
+        int minutes = [self getFileCreatedMinutes:filePath];
+        int cleanMinutes = 1440;
+        // only clear data that was created too long
+        if (minutes < cleanMinutes) continue;
+        
+        [fileMgr removeItemAtPath:filePath error:&err];
+        if (err) {
+            NSLog(@"Oops CDVCamera clearLongTemp failed to delete: %@ (error: %@)", filePath, err);
+        }
+    }
+}
+
+// modify by Lawrence 2020.08.06, Clear previously created temporary files
+- (int)getFileCreatedMinutes:(NSString*)filePath {
+    NSTimeZone *zone = [NSTimeZone systemTimeZone];
+    NSDictionary* fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
+    
+    NSDate *fileCreate = [fileAttribs objectForKey:NSFileCreationDate]; //or NSFileModificationDate
+    NSTimeInterval intervalFile = [zone secondsFromGMTForDate:fileCreate];
+    NSDate *fileCreateDate = [fileCreate dateByAddingTimeInterval:intervalFile];
+    
+    NSDate *now = [NSDate date];
+    NSTimeInterval intervalNow = [zone secondsFromGMTForDate:now];
+    NSDate *currentDate = [now dateByAddingTimeInterval:intervalNow];
+    
+    NSTimeInterval secondsBetween = [currentDate timeIntervalSinceDate:fileCreateDate];
+    return secondsBetween / 60;
 }
 
 @end
