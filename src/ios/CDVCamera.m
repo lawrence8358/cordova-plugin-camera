@@ -755,7 +755,7 @@ static NSString* toBase64(NSData* data) {
     
     while ((fileName = [directoryEnumerator nextObject])) {
         // only delete the files we created
-        if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) continue;
+        // if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) continue;
         
         NSString* filePath = [tempDirectoryPath stringByAppendingPathComponent:fileName];
         int minutes = [self getFileCreatedMinutes:filePath];

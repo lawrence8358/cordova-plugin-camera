@@ -382,4 +382,27 @@ public class FileHelper {
 
         return filePath == "" ? sourceUri.toString() : filePath;
     }
+
+    /** modify by Lawrence 2020.08.07, Clear previously created temporary files */
+    public static void clearLongTemp(Context context) {
+        java.io.File cacheDir = context.getCacheDir();
+        java.io.File[] files = cacheDir.listFiles();
+
+        for (java.io.File f : files) {
+            if(f.isDirectory()) continue;
+
+            long createMinutes = getFileCreatedMinutes(f);
+            long cleanMinutes = 1440;
+            // only clear data that was created too long
+            if (createMinutes < cleanMinutes) continue;
+
+            f.delete();
+        }
+    }
+
+    /** modify by Lawrence 2020.08.07, Clear previously created temporary files */
+    private static long getFileCreatedMinutes(java.io.File file) {
+        Long lastmodified = file.lastModified();
+        return java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - lastmodified);
+    }
 }
