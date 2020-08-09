@@ -688,14 +688,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 return;
             }
         }
-		
-		// Modify by Lawrence 2020.08.06 Check if the source is the new Google Photos App
-        if(this.mediaType == VIDEO && FileHelper.isGoogleNewPhotosUri(uri)) {
-            String googleVideo = FileHelper.copyNewGooglePhotoVideoToCache( this.cordova.getContext(), uri);
-            this.callbackContext.success(googleVideo);
-            return;
-        }
-
         int rotate = 0;
 
         String fileLocation = FileHelper.getRealPath(uri, this.cordova);

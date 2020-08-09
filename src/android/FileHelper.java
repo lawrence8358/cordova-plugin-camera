@@ -143,6 +143,10 @@ public class FileHelper {
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
+            if(isGoogleNewPhotosUri(uri) || isGoogleDriveUri(uri) || isOneDriveUri(uri)) {
+                return copyToTemp(context, uri);
+            }
+
             return getDataColumn(context, uri, null, null);
         }
         // File
@@ -335,24 +339,46 @@ public class FileHelper {
     public static boolean isGoogleNewPhotosUri(Uri uri) {
         return "com.google.android.apps.photos.contentprovider".equals(uri.getAuthority());
     }
+ 
+    private static boolean isGoogleDriveUri(Uri uri) {
+        return "com.google.android.apps.docs.storage".equals(uri.getAuthority()) || "com.google.android.apps.docs.storage.legacy".equals(uri.getAuthority());
+    }
+
+    private static boolean isOneDriveUri(Uri uri) {
+        return "com.microsoft.skydrive.content.external".equals(uri.getAuthority());
+    }
+
+    private static String getDisplayName (android.content.ContentResolver contentResolver, Uri uri) {
+        String[] projection = { MediaStore.MediaColumns.DISPLAY_NAME };
+        Cursor metaCursor = contentResolver.query(uri, projection, null, null, null);
+
+        if (metaCursor != null) {
+            try {
+                if (metaCursor.moveToFirst()) {
+                    return metaCursor.getString(0);
+                }
+            } finally {
+                metaCursor.close();
+            }
+        }
+
+        return "UnknowFileName";
+    }
 
     /***
      * Modify by Lawrence 2020.08.06 Copy the video file to the Cache folder
      * result uri ex : /data/user/0/com.edetw.nextapp3/cache/Video_2db1497a-1ce9-4873-a99f-f1a1ea50c2c1.mp4
      */
-    public static String copyNewGooglePhotoVideoToCache(Context context, Uri sourceUri) {
-        String filePath = "";
+    public static String copyToTemp(Context context, Uri sourceUri) {
         InputStream inputStream = null;
         java.io.BufferedOutputStream outStream = null;
-        try {
-            inputStream = context.getContentResolver().openInputStream(sourceUri);
+        android.content.ContentResolver contentResolver = context.getContentResolver();
+        String fileName = getDisplayName(contentResolver, sourceUri);
+        java.io.File file = new java.io.File(context.getCacheDir(), fileName);
 
-            java.io.File extDir = context.getCacheDir();
-            String timeStamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
-            // Unable to know the selected file type, first assume that they are all mp4
-            filePath = extDir.getAbsolutePath() + "/VIDEO_" + timeStamp + ".mp4";
-            // filePath = extDir.getAbsolutePath() + "/Video_" + java.util.UUID.randomUUID().toString() + ".mp4";
-            outStream = new java.io.BufferedOutputStream(new java.io.FileOutputStream(filePath));
+        try {
+            inputStream = contentResolver.openInputStream(sourceUri);
+            outStream = new java.io.BufferedOutputStream(new java.io.FileOutputStream(file));
 
             byte[] buf = new byte[2048];
             int len;
@@ -362,7 +388,7 @@ public class FileHelper {
 
         } catch (IOException e) {
             e.printStackTrace();
-            filePath = "";
+            return sourceUri.toString();
         } finally {
             try {
                 if (inputStream != null) {
@@ -380,7 +406,7 @@ public class FileHelper {
             }
         }
 
-        return filePath == "" ? sourceUri.toString() : filePath;
+        return file.getPath();
     }
 
     /** modify by Lawrence 2020.08.07, Clear previously created temporary files */
