@@ -758,6 +758,12 @@ static NSString* toBase64(NSData* data) {
         // if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) continue;
         
         NSString* filePath = [tempDirectoryPath stringByAppendingPathComponent:fileName];
+        
+        BOOL isDir = NO;
+        if([fileMgr fileExistsAtPath:filePath isDirectory:&isDir] && isDir){
+            continue;
+        }
+         
         int minutes = [self getFileCreatedMinutes:filePath];
         int cleanMinutes = 1440;
         // only clear data that was created too long
